@@ -1,0 +1,80 @@
+go atlas
+
+mesh three.d
+
+x.m l=0.0  s=0.002
+x.m l=0.05 s=0.002
+
+y.m l=-0.01 s=0.001
+y.m l=-0.004 s=0.0003
+y.m l=0.003  s=0.0003
+y.m l=0.004  s=0.0005
+y.m l=0.005  s=0.0005
+y.m l=0.006  s=0.0005
+
+z.m l=-0.006 s=0.0005
+z.m l=-0.005 s=0.0005
+z.m l=-0.004 s=0.0005
+z.m l=-0.003 s=0.0003
+z.m l=0.003  s=0.0003
+z.m l=0.004  s=0.0005
+z.m l=0.005  s=0.0005
+z.m l=0.006  s=0.0005
+
+#---------------- Regions ----------------
+region num=3 material=air
+
+region num=2 material=sio2 x.min=0.01 x.max=0.04 y.min=-0.004 y.max=0.004 z.min=-0.004 z.max=0.004
+region num=2 material=sio2 x.min=0.0  x.max=0.05 z.min=-0.006 z.max=0.006 y.min=-0.01  y.max=-0.004
+
+region num=1 material=silicon x.min=0.0 x.max=0.05 y.min=-0.004 y.max=0.003 z.min=-0.003 z.max=0.003
+
+#---------------- Electrodes (explicit nums) ----------------
+electrode num=2 name=source x.max=0.0               y.min=-0.004 y.max=0.004 z.min=-0.004 z.max=0.004
+electrode num=3 name=drain  x.min=0.05              y.min=-0.004 y.max=0.004 z.min=-0.004 z.max=0.004
+
+# one big gate box
+electrode num=1 name=gate   x.min=0.01 x.max=0.04 y.min=-0.004 y.max=0.006 z.min=-0.006 z.max=0.006
+
+#---------------- Contacts ----------------
+contact name=source
+contact name=drain
+contact name=gate workfun=4.8
+
+#---------------- Doping ----------------
+doping region=1 n.type uniform conc=1e20 x.min=0.0  x.max=0.01
+doping region=1 n.type uniform conc=1e20 x.min=0.04 x.max=0.05
+
+#---------------- Output & Models ----------------
+output band.par con.band val.band
+
+models srh fermi conmob fldmob bgn
+method newton
+
+#---------------- Initial equilibrium ----------------
+solve init
+
+# Drain bias at 1 V (electrode 3), source = 0 V (electrode 2)
+solve v3=1.0
+
+# Save equilibrium-at-VD=1 structure
+save outf=quantumex16_negf_vg00_vd10.str
+
+#---------------- MANUAL GATE SWEEP (forces log content) ----------------
+log outf=quantumex16_negf_IVg_vd10.log
+
+# each solve writes one line into the log
+solve v1=0.0  name=gate
+solve v1=0.2  name=gate
+solve v1=0.4  name=gate
+solve v1=0.6  name=gate
+solve v1=0.8  name=gate
+solve v1=1.0  name=gate
+solve v1=1.2  name=gate
+
+log off
+
+# Save final structure at VG = 1.2, VD = 1
+save outf=quantumex16_negf_vg12_vd10.str
+
+quit
